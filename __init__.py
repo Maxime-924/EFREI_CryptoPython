@@ -11,14 +11,31 @@ app = Flask(__name__)
 def hello_world():
     return render_template('hello.html') #Comm2
 
-key = Fernet.generate_key()
-f = Fernet(key)
+@app.route('/encrypt/<key>/<valeur>')
+def encryptage(key, valeur):
+    try:
+        f = Fernet(key.encode())  # Crée un objet Fernet avec la clé fournie
+        valeur_bytes = valeur.encode()
+        token = f.encrypt(valeur_bytes)
+        return f"Valeur encryptée : {token.decode()}"
+    except Exception as e:
+        return f"Erreur dans l'encryptage : {str(e)}"
 
-@app.route('/encrypt/<string:valeur>')
-def encryptage(valeur):
-    valeur_bytes = valeur.encode()  # Conversion str -> bytes
-    token = f.encrypt(valeur_bytes)  # Encrypt la valeur
-    return f"Valeur encryptée : {token.decode()}"  # Retourne le token en str
-                                                                                                                                                     
-if __name__ == "__main__":
-  app.run(debug=True)
+@app.route('/decrypt/<key>/<valeur>')
+def decryptage(key, valeur):
+    try:
+        f = Fernet(key.encode())
+        valeur_bytes = valeur.encode()
+        original = f.decrypt(valeur_bytes)
+        return f"Valeur déchiffrée : {original.decode()}"
+    except InvalidToken:
+        return "Clé invalide ou token corrompu."
+    except Exception as e:
+        return f"Erreur dans le déchiffrement : {str(e)}"
+
+@app.route('/generate-key')
+def generate_key():
+    return f"Voici votre clé personnelle : {Fernet.generate_key().decode()}"
+
+if name == "main":
+    app.run(debug=True)
